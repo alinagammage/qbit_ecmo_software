@@ -1,8 +1,8 @@
 import sys
 # serial monitor communication
-import serial
+from serial import Serial
 #pyqt6 modules
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject
+from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QHBoxLayout, QLabel, QWidget, QLineEdit, QDialog, QPushButton
 # mean for averages
 from statistics import mean
@@ -34,12 +34,13 @@ class WorkerThread(QThread):
     # opens the serial monitor
     def open_serial_monitor(self):
         # indicates that serial monitor has been opened
+        print('serial monitor opened')
 
         # intitializes the access to the serial port
-        self.ser = serial.Serial()
+        self.ser = Serial()
         
         # specifies which serial port
-        portVar = 'COM20'
+        portVar = '/dev/cu.usbmodem11202'
         
         # opening serial port
         self.ser.baudrate = 9600
@@ -56,47 +57,38 @@ class WorkerThread(QThread):
 
                 # add to the list until it has 10 readings
                 if len(self.value_list)<10:
-                    # take the set of 4 values
+                    # take the set of 7 values
                     value_string = packet.decode('utf').rstrip('\n')
+
+                    # if good read, add the values to the value set
                     try:
                         value_set = [float(item.strip()) for item in value_string.split(',')]
 
                         # add each set of values to the list to be averaged
                         self.value_list.append(value_set)
 
+                    # if a bad read, print bad read
                     except:
                         print('bad read')
-                        pass
-                    else:
                         pass
 
 
                 # if at 10 readings, take the averages and return the result
                 else:
+                    # further filtering to remove any readings that don't consist of 7 values
                     for i, item in enumerate(self.value_list):
-                        if len(item) < 4:
+                        if len(item) < 8:
                             self.value_list.pop(i)
 
                     # iterate through the value list and make an an idividual list for the readings of each variable
+                    averages = []
                     for sublist in self.value_list:
-                        values1 = []
-                        values1.append(sublist[0])
-
-                        values2 = []
-                        values2.append(sublist[1])
-
-                        values3 = []
-                        values3.append(sublist[2])
-
-                        values4 = []
-                        values4.append(sublist[3])
-
-                        avg1 = round(mean(values1)/10, 2)
-                        avg2 = round(mean(values2)/10, 2)
-                        avg3 = round(mean(values3)/10, 2)
-                        avg4 = round(mean(values4)/10, 2)
-
-                    averages = [avg1, avg2, avg3, avg4]
+                        sublist_averages = []
+                        for i in range(7):
+                            values = [sublist[i]]
+                            avg = round(mean(values)/10, 2)
+                            sublist_averages.append(avg)
+                        averages.extend(sublist_averages)
 
                     self.main_window.set_values(averages)
                     self.value_list = []
@@ -297,7 +289,9 @@ class MainWindow(QMainWindow):
     # called by the thread with the list of new averages to be displayed
     def set_values(self, val_list):
         # printing the list of averages
-        print(val_list)
+        for value in val_list:
+            print(value)
+
         # rests labels with new reading values
         self.blood_temperature_value.setText(str(val_list[0]))
         self.flowrate_value.setText(str(val_list[1]))
