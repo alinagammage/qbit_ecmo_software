@@ -59,6 +59,7 @@ class WorkerThread(QThread):
                 if len(self.value_list)<10:
                     # take the set of 7 values
                     value_string = packet.decode('utf').rstrip('\n')
+                    print(value_string)
 
                     # if good read, add the values to the value set
                     try:
@@ -288,9 +289,6 @@ class MainWindow(QMainWindow):
 
     # called by the thread with the list of new averages to be displayed
     def set_values(self, val_list):
-        # printing the list of averages
-        for value in val_list:
-            print(value)
 
         # rests labels with new reading values
         self.blood_temperature_value.setText(str(val_list[0]))

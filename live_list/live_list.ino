@@ -11,14 +11,14 @@ void loop() {
   }
   
   // Print values in the desired format
-  Serial.print("[");
   for (int i = 0; i < 7; i++) {
     Serial.print(values[i]);
     if (i < 6) {
-      Serial.print(", ");
+      Serial.print(",");
     }
   }
-  Serial.println("]");
+
+  Serial.print("\n");
   
   delay(100);  // Delay for 100 milliseconds (0.1 seconds)
 }
