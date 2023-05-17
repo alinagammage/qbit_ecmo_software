@@ -40,7 +40,7 @@ class WorkerThread(QThread):
         self.ser = Serial()
         
         # specifies which serial port
-        portVar = '/dev/cu.usbmodem11202'
+        portVar = '/dev/cu.usbmodem1202'
         
         # opening serial port
         self.ser.baudrate = 9600
@@ -59,7 +59,6 @@ class WorkerThread(QThread):
                 if len(self.value_list)<10:
                     # take the set of 7 values
                     value_string = packet.decode('utf').rstrip('\n')
-                    print(value_string)
 
                     # if good read, add the values to the value set
                     try:
@@ -94,12 +93,6 @@ class WorkerThread(QThread):
                     self.main_window.set_values(averages)
                     self.value_list = []
 
-    
-    # prints to the serial monitor
-    def print_to_monitor(self, value_dict):
-        # writes the list to the serial monitor THIS LINE NOT WORKING
-        self.ser.write(value_dict)
-
 
 
 # main window of the gui
@@ -119,71 +112,13 @@ class MainWindow(QMainWindow):
         # call function to create all the gui visuals
         self.gui_visuals()
 
-        # create the list which hold the values in the text document
-        self.temperature_input_value = 'ct' + str(0)
-        self.flowrate_input_value = 'cf' + str(0)
-        self.oxygen_input_value = 'co' + str(0)
-
-        # creating the ok button for the pop up and connecting it to the close pop up function
-        self.ok_button = QPushButton('ok')
-        self.ok_button.pressed.connect(self.close_pop_up)
-        self.defaults_pop_up()
+        # starting thread that reads the arduino values
+        self.run_thread()
 
         # set the created layout as the layout for the app
         widget = QWidget()
         widget.setLayout(self.hbox_layout)
         self.setCentralWidget(widget)
-
-
-    # launch pop up
-    def defaults_pop_up(self):
-        # create pop up window, can change size etc
-        self.pop_up = QDialog()
-        self.pop_up.resize(100, 100)
-
-        # pop up layout
-        self.pop_up_vbox = QVBoxLayout()
-
-        # make labels and input boxes
-        temperature_default_label = QLabel('Set default temperature:')
-        self.temperature_default = QLineEdit()
-        flowrate_default_label = QLabel('Set default flowrate:')
-        self.flowrate_default = QLineEdit()
-        oxygen_default_label = QLabel('Set default blood oxygen concentration:')
-        self.oxygen_default = QLineEdit()
-
-        # add each of the labels and input boxes to layout
-        self.pop_up_vbox.addWidget(temperature_default_label)
-        self.pop_up_vbox.addWidget(self.temperature_default)
-        self.pop_up_vbox.addWidget(flowrate_default_label)
-        self.pop_up_vbox.addWidget(self.flowrate_default)
-        self.pop_up_vbox.addWidget(oxygen_default_label)
-        self.pop_up_vbox.addWidget(self.oxygen_default)
-        self.pop_up_vbox.addWidget(self.ok_button)
-
-        # launch pop up, launched first before the main gui
-        self.pop_up.setLayout(self.pop_up_vbox)
-        self.pop_up.exec()
-
-
-    # function that closes the pop up. starts the thread and arduino readings.
-    def close_pop_up(self):
-        # actually close the pop up
-        self.pop_up.close()
-
-        # saving inputs
-        self.temperature_input_default = str(self.temperature_default.text())
-        self.flowrate_input_default = str(self.flowrate_default.text())
-        self.oxygen_input_default = str(self.oxygen_default.text())
-
-        # starts running the thread, opens the serial monitor
-        self.run_thread()
-
-        # writing inputs to serial monitor
-        self.write_txt(self.temperature_input_default, None, None)
-        self.write_txt(None, self.flowrate_input_default, None)
-        self.write_txt(None, None, self.oxygen_input_default)
-
 
 
     # functon that creates all the visuals for the gui, this is where changes would be made for the layout
@@ -192,6 +127,12 @@ class MainWindow(QMainWindow):
         # creating the layouts for the app
         self.hbox_layout = QHBoxLayout()
         self.full_layout = QVBoxLayout()
+
+        read_types = ['Inlet Temperature, Outlet Temperature', 'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Flowrate']
+        display_dictionary = {}
+        
+        for read_type in read_types:
+            display_dictionary[read_type] = [read_type, QLabel() = None, 
 
         # blood temp stuff
         # layout
@@ -204,14 +145,9 @@ class MainWindow(QMainWindow):
         self.blood_temperature_value = QLabel('__')
         self.blood_temperature_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.blood_temperature_value.setStyleSheet('background-color: #c8dfff')
-        # input line
-        self.blood_temperature_input = QLineEdit()
         # adding to temp layout
         self.blood_temperature_vbox.addWidget(self.blood_temperature_title)
         self.blood_temperature_vbox.addWidget(self.blood_temperature_value)
-        self.blood_temperature_vbox.addWidget(self.blood_temperature_input)
-        # taking in temp input values once enter pressed
-        self.blood_temperature_input.returnPressed.connect(lambda: self.write_txt(self.blood_temperature_input.text(), None, None))
 
 
         # flowrate stuff
@@ -225,14 +161,9 @@ class MainWindow(QMainWindow):
         self.flowrate_value = QLabel('__')
         self.flowrate_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.flowrate_value.setStyleSheet('background-color: #c8dfff')
-        # input line
-        self.flowrate_input = QLineEdit()
         # adding to flowrate layout
         self.flowrate_vbox.addWidget(self.flowrate_title)
         self.flowrate_vbox.addWidget(self.flowrate_value)
-        self.flowrate_vbox.addWidget(self.flowrate_input)
-        # taking in temp input values once enter pressed
-        self.flowrate_input.returnPressed.connect(lambda: self.write_txt(None, self.flowrate_input.text(), None))
 
 
         # blood oxygen concentration stuff
@@ -246,14 +177,9 @@ class MainWindow(QMainWindow):
         self.oxygen_concentration_value = QLabel('__')
         self.oxygen_concentration_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.oxygen_concentration_value.setStyleSheet('background-color: #c8dfff')
-        # input line
-        self.oxygen_concentration_input = QLineEdit()
         # adding to temp layout
         self.oxygen_concentration_vbox.addWidget(self.oxygen_concentration_title)
         self.oxygen_concentration_vbox.addWidget(self.oxygen_concentration_value)
-        self.oxygen_concentration_vbox.addWidget(self.oxygen_concentration_input)
-        # taking in temp input values once enter pressed
-        self.oxygen_concentration_input.returnPressed.connect(lambda: self.write_txt(None, None, self.oxygen_concentration_input.text()))
 
 
         # motor rpm stuff
@@ -267,11 +193,9 @@ class MainWindow(QMainWindow):
         self.motor_rpm_value = QLabel('__')
         self.motor_rpm_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.motor_rpm_value.setStyleSheet('background-color: #c8dfff')
-        self.motor_rpm_input = QLineEdit()
-        # adding to temp layout
+        # adding to layout
         self.motor_rpm_vbox.addWidget(self.motor_rpm_title)
         self.motor_rpm_vbox.addWidget(self.motor_rpm_value)
-        self.motor_rpm_vbox.addWidget(self.motor_rpm_input)
 
 
         # full layout
@@ -297,28 +221,10 @@ class MainWindow(QMainWindow):
         self.motor_rpm_value.setText(str(val_list[3])) 
 
 
-    # writes to the serial monitor whenever enter is pressed in one of the input boxes
-    def write_txt(self, temp, flowrate, oxygen):
-        # resets whatever new value was just entered, with the values for the other variables staying the same
-        
-        # temp
-        if temp is not None:
-            self.temperature_input_value = 'ct' + str(temp)
-            print(self.temperature_input_value)
-            self.thread.print_to_monitor(self.temperature_input_value.encode('utf-8'))
-
-        # flowrate
-        if flowrate is not None:
-            self.flowrate_input_value = 'cf' + str(flowrate)
-            print(self.flowrate_input_value)
-            self.thread.print_to_monitor(self.flowrate_input_value.encode('utf-8'))
-
-        # oxygen
-        if oxygen is not None:
-            self.oxygen_input_value = 'co' + str(oxygen)
-            print(self.oxygen_input_value)
-            self.thread.print_to_monitor(self.oxygen_input_value.encode('utf-8'))
-
+class Reading_Visual():
+    def __init__(self):
+        super().__init__():
+        pass
 
 
 # run the application
