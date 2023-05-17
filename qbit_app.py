@@ -103,6 +103,8 @@ class MainWindow(QMainWindow):
         # window visuals
         self.setWindowTitle('QBiT App Prototype')
         self.setStyleSheet('background-color: white')
+        self.move(100,100)
+        self.resize(1500, 500)
 
         # other part of the 'hack-y' fix. creates an instance of the WorkerThread, passing in itself so that its functions can be accessed by the thread
         self.thread = WorkerThread(self)
@@ -127,21 +129,19 @@ class MainWindow(QMainWindow):
 
         # making the visual components for each of the read types
         # initializing dictionaries
-        read_types = ['Inlet Temperature, Outlet Temperature', 'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Flowrate']
-        labels = {}
-        read = {}
-        plot = {}
-        vbox = {}
+        self.read_types = ['Inlet Temperature', 'Outlet Temperature', 'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Flowrate']
+        self.labels = {}
+        self.read = {}
+        self.vbox = {}
         # putting values in dictionaries
-        for read_type in read_types:
-            labels[read_type], read[read_type], plot[read_type], vbox[read_type] = self.make_visuals(read_type)
+        for read_type in self.read_types:
+            self.labels[read_type], self.read[read_type], self.vbox[read_type] = self.make_visuals(read_type)
 
-            vbox[read_type].addWidget(labels[read_type])
-            vbox[read_type].addWidget(read[read_type])
-            vbox[read_type].addWidget(plot[read_type])
+            self.vbox[read_type].addWidget(self.labels[read_type])
+            self.vbox[read_type].addWidget(self.read[read_type])
 
         # putting the visual components into the app layout
-            self.full_layout.addLayout(vbox[read_type])
+            self.full_layout.addLayout(self.vbox[read_type], 1)
  
 
     # function that runs the thread, called once when the pop up is closed
@@ -152,13 +152,13 @@ class MainWindow(QMainWindow):
 
     # called by the thread with the list of new averages to be displayed
     def set_values(self, val_list):
-        pass
 
-        # # rests labels with new reading values
-        # self.blood_temperature_value.setText(str(val_list[0]))
-        # self.flowrate_value.setText(str(val_list[1]))
-        # self.oxygen_concentration_value.setText(str(val_list[2]))
-        # self.motor_rpm_value.setText(str(val_list[3])) 
+        i = 0
+
+        for read_type in self.read_types:
+            self.read[read_type].setText(str(val_list[i]))
+            i =+ 1
+
 
     # makes the visuals
     def make_visuals(self,title):
@@ -168,10 +168,9 @@ class MainWindow(QMainWindow):
         read = QLabel('-')
         read.setAlignment(Qt.AlignmentFlag.AlignCenter)
         read.setStyleSheet('background-color: #9d9ba2')
-        plot = QLabel(f'plot for {title}')
         vbox = QVBoxLayout()
 
-        return label, read, plot, vbox
+        return label, read, vbox
 
 
 # run the application
