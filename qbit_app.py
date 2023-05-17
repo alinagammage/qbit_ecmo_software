@@ -103,8 +103,6 @@ class MainWindow(QMainWindow):
         # window visuals
         self.setWindowTitle('QBiT App Prototype')
         self.setStyleSheet('background-color: white')
-        self.move(275, 100)
-        self.resize(800, 100)
 
         # other part of the 'hack-y' fix. creates an instance of the WorkerThread, passing in itself so that its functions can be accessed by the thread
         self.thread = WorkerThread(self)
@@ -117,7 +115,7 @@ class MainWindow(QMainWindow):
 
         # set the created layout as the layout for the app
         widget = QWidget()
-        widget.setLayout(self.hbox_layout)
+        widget.setLayout(self.full_layout)
         self.setCentralWidget(widget)
 
 
@@ -125,85 +123,26 @@ class MainWindow(QMainWindow):
     # new functions will be needed for buttons etc that change the layout depending on what is selected
     def gui_visuals(self):
         # creating the layouts for the app
-        self.hbox_layout = QHBoxLayout()
-        self.full_layout = QVBoxLayout()
+        self.full_layout = QHBoxLayout()
 
+        # making the visual components for each of the read types
+        # initializing dictionaries
         read_types = ['Inlet Temperature, Outlet Temperature', 'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Flowrate']
-        display_dictionary = {}
-        
+        labels = {}
+        read = {}
+        plot = {}
+        vbox = {}
+        # putting values in dictionaries
         for read_type in read_types:
-            display_dictionary[read_type] = [read_type, QLabel() = None, 
+            labels[read_type], read[read_type], plot[read_type], vbox[read_type] = self.make_visuals(read_type)
 
-        # blood temp stuff
-        # layout
-        self.blood_temperature_vbox = QVBoxLayout()
-        # title
-        self.blood_temperature_title = QLabel('Blood Temperature [C\u00b0]')
-        self.blood_temperature_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.blood_temperature_title.setStyleSheet('background-color: #9d9ba2')
-        # reading
-        self.blood_temperature_value = QLabel('__')
-        self.blood_temperature_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.blood_temperature_value.setStyleSheet('background-color: #c8dfff')
-        # adding to temp layout
-        self.blood_temperature_vbox.addWidget(self.blood_temperature_title)
-        self.blood_temperature_vbox.addWidget(self.blood_temperature_value)
+            vbox[read_type].addWidget(labels[read_type])
+            vbox[read_type].addWidget(read[read_type])
+            vbox[read_type].addWidget(plot[read_type])
 
-
-        # flowrate stuff
-        # layout
-        self.flowrate_vbox = QVBoxLayout()
-        # title
-        self.flowrate_title = QLabel('Flowrate [L/min]')
-        self.flowrate_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.flowrate_title.setStyleSheet('background-color: #9d9ba2')
-        # reading
-        self.flowrate_value = QLabel('__')
-        self.flowrate_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.flowrate_value.setStyleSheet('background-color: #c8dfff')
-        # adding to flowrate layout
-        self.flowrate_vbox.addWidget(self.flowrate_title)
-        self.flowrate_vbox.addWidget(self.flowrate_value)
-
-
-        # blood oxygen concentration stuff
-        # layout
-        self.oxygen_concentration_vbox = QVBoxLayout()
-        # title
-        self.oxygen_concentration_title = QLabel('Oxygen Concentration [%]')
-        self.oxygen_concentration_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.oxygen_concentration_title.setStyleSheet('background-color: #9d9ba2')
-        # reading
-        self.oxygen_concentration_value = QLabel('__')
-        self.oxygen_concentration_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.oxygen_concentration_value.setStyleSheet('background-color: #c8dfff')
-        # adding to temp layout
-        self.oxygen_concentration_vbox.addWidget(self.oxygen_concentration_title)
-        self.oxygen_concentration_vbox.addWidget(self.oxygen_concentration_value)
-
-
-        # motor rpm stuff
-        # layout
-        self.motor_rpm_vbox = QVBoxLayout()
-        # title
-        self.motor_rpm_title = QLabel('Oxygen Concentration [%]')
-        self.motor_rpm_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.motor_rpm_title.setStyleSheet('background-color: #9d9ba2')
-        # reading
-        self.motor_rpm_value = QLabel('__')
-        self.motor_rpm_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.motor_rpm_value.setStyleSheet('background-color: #c8dfff')
-        # adding to layout
-        self.motor_rpm_vbox.addWidget(self.motor_rpm_title)
-        self.motor_rpm_vbox.addWidget(self.motor_rpm_value)
-
-
-        # full layout
-        self.hbox_layout.addLayout(self.blood_temperature_vbox,1)
-        self.hbox_layout.addLayout(self.flowrate_vbox, 1)
-        self.hbox_layout.addLayout(self.oxygen_concentration_vbox, 1)
-        self.hbox_layout.addLayout(self.motor_rpm_vbox, 1)
-
+        # putting the visual components into the app layout
+            self.full_layout.addLayout(vbox[read_type])
+ 
 
     # function that runs the thread, called once when the pop up is closed
     def run_thread(self):
@@ -213,18 +152,26 @@ class MainWindow(QMainWindow):
 
     # called by the thread with the list of new averages to be displayed
     def set_values(self, val_list):
-
-        # rests labels with new reading values
-        self.blood_temperature_value.setText(str(val_list[0]))
-        self.flowrate_value.setText(str(val_list[1]))
-        self.oxygen_concentration_value.setText(str(val_list[2]))
-        self.motor_rpm_value.setText(str(val_list[3])) 
-
-
-class Reading_Visual():
-    def __init__(self):
-        super().__init__():
         pass
+
+        # # rests labels with new reading values
+        # self.blood_temperature_value.setText(str(val_list[0]))
+        # self.flowrate_value.setText(str(val_list[1]))
+        # self.oxygen_concentration_value.setText(str(val_list[2]))
+        # self.motor_rpm_value.setText(str(val_list[3])) 
+
+    # makes the visuals
+    def make_visuals(self,title):
+        label = QLabel(title)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setStyleSheet('background-color: #7ba8f7')
+        read = QLabel('-')
+        read.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        read.setStyleSheet('background-color: #9d9ba2')
+        plot = QLabel(f'plot for {title}')
+        vbox = QVBoxLayout()
+
+        return label, read, plot, vbox
 
 
 # run the application
