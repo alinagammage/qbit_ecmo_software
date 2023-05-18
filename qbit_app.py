@@ -185,6 +185,11 @@ class MainWindow(QMainWindow):
 
     # called by the thread with the list of new averages to be displayed
     def set_values(self, val_list):
+        if self.timer > 100:
+            self.time = [0]
+            self.timer = 0
+            for read_type in self.read_types:
+                self.array[read_type] = []
         # displaying new reads
         for i, read_type in enumerate(self.read_types):
             self.new_read_value[read_type] = val_list[i]
@@ -227,16 +232,15 @@ class MainWindow(QMainWindow):
 
     def update_plot(self, plot_read, new_value1, new_value2=None):
         # update two values on the same plot if it's the blood pressure
+        self.plots[plot_read].clear()
         if plot_read == 'Blood Pressure':
             self.array['Diastolic Blood Pressure'].append(new_value1)
             self.array['Systolic Blood Pressure'].append(new_value2)
-            self.plots['Blood Pressure'].clear()
             self.plots['Blood Pressure'].plot(self.time, self.array['Diastolic Blood Pressure'])
             self.plots['Blood Pressure'].plot(self.time, self.array['Systolic Blood Pressure'])
-       # update only the one value if it isn't blood pressure
+    # update only the one value if it isn't blood pressure
         else:
             self.array[plot_read].append(new_value1)
-            self.plots[plot_read].clear()
             self.plots[plot_read].plot(self.time, self.array[plot_read])
 
         # update the plot
