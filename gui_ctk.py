@@ -2,17 +2,14 @@
 # Written by Daniel Kurtz
 
 # Importing libraries
-import shutil, os, tkinter.messagebox, numpy as np, random as rand, tkinter.font as tkfont#, xlsxwriter as xl, pandas as pd     #, sys, stat, re # pandas is used to make Threshold Excel File
+import os, numpy as np, tkinter.font as tkfont #, xlsxwriter as xl, pandas as pd     #, sys, stat, re # pandas is used to make Threshold Excel File
 
 #import tkinter as tk
-from tkinter import filedialog
 from tkinter import *
 #import tkinter.ttk as ttk
 #from tkinter.ttk import *
 
-import win32com.client as win32
 import customtkinter as ctk
-from datetime import date
 from PIL import ImageTk, Image
 
 os. system('cls')
