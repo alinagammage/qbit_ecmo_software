@@ -66,7 +66,8 @@ class App(ctk.CTk):
         self.frame_left.grid(row=0, column=0, sticky="nswe", padx=20, pady=20) # Pad and Sticky space out frames
         self.frame_left.grid_propagate(False)
 
-        self.frame_right = ctk.CTkFrame(master=self,width=700)
+        self.frame_right = ctk.CTkFrame(master=self, width=700,
+                                        bg_color= '#969696', fg_color= '#969696') # Hex Colour Code, Light Grey
         self.frame_right.grid(row=0, column=1, sticky="nswe", padx=20, pady=20) # Pad and Sticky space out frames
         self.frame_right.grid_propagate(False)
 
@@ -92,8 +93,6 @@ class App(ctk.CTk):
         ## Blood P
         self.frame_BloodP = ctk.CTkFrame(master=self.frame_left)
         self.frame_BloodP.grid(row=3, column=1, columnspan=1, rowspan=1, sticky = "nswe")
-        self.frame_BloodP.configure(border_width=1, border_color='#969696', # Hex Colour Code, Light Grey
-                                    width=250, corner_radius=0)
 
         self.frame_BloodP.grid_rowconfigure(0, minsize=5)   # empty row with minsize as spacing
         self.sysP_Label = ctk.CTkLabel(master=self.frame_BloodP,
@@ -107,8 +106,6 @@ class App(ctk.CTk):
         ## Outlet Temperature
         self.frame_OutT = ctk.CTkFrame(master=self.frame_left)
         self.frame_OutT.grid(row=5, column=1, columnspan=1, rowspan=1, sticky = "nswe")
-        self.frame_OutT.configure(border_width=1, border_color='#969696', # Hex Colour Code, Light Grey
-                                    width=250, corner_radius=0)
 
         self.frame_OutT.grid_rowconfigure(0, minsize=5)   # empty row with minsize as spacing
         self.sysP_Label = ctk.CTkLabel(master=self.frame_OutT,
@@ -123,8 +120,6 @@ class App(ctk.CTk):
         ## Flow Rate
         self.frame_FlowR = ctk.CTkFrame(master=self.frame_left)
         self.frame_FlowR.grid(row=7, column=1, columnspan=1, rowspan=1, sticky = "nswe")
-        self.frame_FlowR.configure(border_width=1, border_color='#969696', # Hex Colour Code, Light Grey
-                                    width=250, corner_radius=0)
 
         self.sysP_Label = ctk.CTkLabel(master=self.frame_FlowR,
                                        text="Blood Flow Rate [L/min]", font=fontData)
@@ -138,8 +133,6 @@ class App(ctk.CTk):
         ## Blood O2 Saturation
         self.frame_bO2 = ctk.CTkFrame(master=self.frame_left)
         self.frame_bO2.grid(row=9, column=1, columnspan=1, rowspan=1, sticky = "nswe")
-        self.frame_bO2.configure(border_width=1, border_color='#969696', # Hex Colour Code, Light Grey
-                                    width=250, corner_radius=0)
 
         self.sysP_Label = ctk.CTkLabel(master=self.frame_bO2,
                                        text="Blood Hb Saturation [%]", font=fontData)
@@ -152,8 +145,6 @@ class App(ctk.CTk):
         ## Blood CO2 Saturation
         self.frame_bCO2 = ctk.CTkFrame(master=self.frame_left)
         self.frame_bCO2.grid(row=11, column=1, columnspan=1, rowspan=1, sticky = "nswe")
-        self.frame_bCO2.configure(border_width=1, border_color='#969696', # Hex Colour Code, Light Grey
-                                    width=250, corner_radius=0)
 
         self.sysP_Label = ctk.CTkLabel(master=self.frame_bCO2,
                                        text="Partial Pressure of Blood CO2 [mmHg]", font=fontData)
@@ -238,14 +229,34 @@ class App(ctk.CTk):
         self.label_R_RB.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
 
 
-        # ============ frame_Settings ============
+        # ============ Settings Frame ============
         self.frameSettings = ctk.CTkFrame(master=self.frame_right)
         self.frameSettings.grid(row=4, column=0, columnspan=4, rowspan=1, sticky="nswe")
         self.frameSettings.configure(border_width=2, border_color='#969696',  # Hex Colour Code, Light Grey
                                         corner_radius=0)
 
+        entry_option = ctk.StringVar(value="Conditions")
 
-## Functions
+        self.value_option_menu = ctk.CTkOptionMenu(master=self.frameSettings, values=["Conditions", "Blood Outlet T",
+                                                                "Blood Flow Rate", "Blood [O2]", "Blood [CO2]"],
+                                                   command = self.value_selection_menu_callback, variable = entry_option)
+        self.value_option_menu.grid(row=0, column=0, columnspan = 4, padx=20, pady=(20, 10)) # pady=(dist from top, bot)
+
+        self.string_input_button = ctk.CTkButton(master=self.frameSettings, text="Open CTkInputDialog",
+                                                           command=self.open_input_dialog_event)
+        self.string_input_button.grid(row=1, column=0, padx=20, pady=(10, 10))
+
+
+    ## Functions
+
+    def value_selection_menu_callback(self, entry_option):
+        print("Selected:", entry_option)
+
+    # Value Entry Box Function ##########################################################################
+    def open_input_dialog_event(self):
+        dialog = ctk.CTkInputDialog(text="Type in the desired " + self.value_option_menu.get(), title="CTkInputDialog")
+        user_input_value = str(dialog.get_input())
+        print(user_input_value)
 
     # Dark/Light Mode Switch Function
     def change_mode(self):
@@ -323,7 +334,6 @@ class App(ctk.CTk):
                 self.pic_labelL.image = pixelImgLarge
                 self.pic_labelL.grid(row=7, column=0, columnspan=3, rowspan=4, pady=0, padx=0, sticky="nswe")
                 init_Var = "Swap"
-
 
     def button_event(self): # Extra function to show how buttons work
         print("Button pressed") # ======= Check
