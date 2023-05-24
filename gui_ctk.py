@@ -1,5 +1,5 @@
-## ====== Cottrell Lab Pixel Analysis Project Folder Creation Script
-# Written by Daniel Kurtz
+## ====== QBiT Ultraportable ECMO Data Viewer
+# Written by Daniel Kurtz and Alina Gammage
 
 # Importing libraries
 import os, numpy as np, tkinter.font as tkfont #, xlsxwriter as xl, pandas as pd     #, sys, stat, re # pandas is used to make Threshold Excel File
@@ -28,7 +28,7 @@ arduino_bCO2 = arduino_Input[5]
 
 # CTK App Settings
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
-ctk.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
+ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 class App(ctk.CTk):
 
@@ -43,7 +43,7 @@ class App(ctk.CTk):
         self.title("Ultraportable ECMO Data Visualization App")
         self.iconbitmap("Caduceus_icon_gold.ico")
         self.geometry(f"{App.WIDTH}x{App.HEIGHT}")
-        # self.minsize(App.WIDTH, App.HEIGHT)
+        self.minsize(App.WIDTH, App.HEIGHT)
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)  # call .on_closing() when app gets closed
 
@@ -73,10 +73,10 @@ class App(ctk.CTk):
         # Configure Grid Layout (15x3)
         self.frame_left.grid_rowconfigure(0, minsize=10)   # empty row with minsize as spacing
         self.frame_left.grid_rowconfigure(2, minsize=10)   # empty row with minsize as spacing
-        self.frame_left.grid_rowconfigure(4, minsize=0)   # empty row with minsize as spacing
-        self.frame_left.grid_rowconfigure(6, minsize=0)  # empty row with minsize as spacing
-        self.frame_left.grid_rowconfigure(8, minsize=0)  # empty row with minsize as spacing
-        self.frame_left.grid_rowconfigure(10, minsize=0)  # empty row with minsize as spacing
+        self.frame_left.grid_rowconfigure(4, minsize=5)   # empty row with minsize as spacing
+        self.frame_left.grid_rowconfigure(6, minsize=5)  # empty row with minsize as spacing
+        self.frame_left.grid_rowconfigure(8, minsize=5)  # empty row with minsize as spacing
+        self.frame_left.grid_rowconfigure(10, minsize=5)  # empty row with minsize as spacing
         self.frame_left.grid_rowconfigure(12, minsize=10)  # empty row with minsize as spacing
         self.frame_left.grid_rowconfigure(14, minsize=10)  # empty row with minsize as spacing
         self.frame_left.grid_columnconfigure(0, minsize=20)  # empty row with minsize as spacing
@@ -157,10 +157,6 @@ class App(ctk.CTk):
                                           text="Created by Daniel Kurtz and Alina Gammage for QBiT", font=fontAuthors)
         self.authors_Label.grid(row=13, column=1, pady=20, padx=20,sticky="ew")
 
-        # = Extra switch, left in code in case it's needed
-        # self.switch_1 = ctk.CTkSwitch(master=self.frame_left)
-        # self.switch_1.grid(row=8, column=0, pady=10, padx=20, sticky="w")
-
 
         # ============ Right Frame ============
 
@@ -239,7 +235,7 @@ class App(ctk.CTk):
                                                    command = self.value_selection_menu_callback, variable = entry_option)
         self.value_option_menu.grid(row=0, column=0, columnspan = 4, padx=20, pady=(20, 10)) # pady=(dist from top, bot)
 
-        self.string_input_button = ctk.CTkButton(master=self.frameSettings, text="Open CTkInputDialog",
+        self.string_input_button = ctk.CTkButton(master=self.frameSettings, text="Input a Value",
                                                            command=self.open_input_dialog_event)
         self.string_input_button.grid(row=1, column=0, padx=20, pady=(10, 10))
 
@@ -251,7 +247,7 @@ class App(ctk.CTk):
 
     # Value Entry Box Function ##########################################################################
     def open_input_dialog_event(self):
-        dialog = ctk.CTkInputDialog(text="Type in the desired " + self.value_option_menu.get(), title="CTkInputDialog")
+        dialog = ctk.CTkInputDialog(text="Type in the desired " + self.value_option_menu.get(), title="Value Input Window")
         user_input_value = str(dialog.get_input())
         print(user_input_value)
 
@@ -331,9 +327,6 @@ class App(ctk.CTk):
                 self.pic_labelL.image = pixelImgLarge
                 self.pic_labelL.grid(row=7, column=0, columnspan=3, rowspan=4, pady=0, padx=0, sticky="nswe")
                 init_Var = "Swap"
-
-    def button_event(self): # Extra function to show how buttons work
-        print("Button pressed") # ======= Check
 
     def on_closing(self, event=0):
         self.destroy()
