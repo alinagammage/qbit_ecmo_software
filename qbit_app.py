@@ -11,6 +11,14 @@ from statistics import mean
 from matplotlib.figure import Figure
 from matplotlib.backends import backend_qt5agg
 
+# imports for tkinter
+import numpy as np
+from tkinter import *
+import customtkinter as ctk
+
+# CTK app settings - 
+ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
+ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 
 # create working thread to run arduino read in the backround
@@ -44,7 +52,7 @@ class WorkerThread(QThread):
         self.ser = Serial()
         
         # specifies which serial port
-        portVar = '/dev/cu.usbmodem1202'
+        portVar = '/dev/cu.usbmodem11202'
         
         # opening serial port
         self.ser.baudrate = 9600
@@ -100,21 +108,31 @@ class WorkerThread(QThread):
 
 
 # main window of the gui
-class MainWindow(QMainWindow):
+class MainWindow(ctk.CTk):
+
     def __init__(self):
         super().__init__()
 
         # window visuals
-        self.setWindowTitle('QBiT App Prototype')
-        self.setStyleSheet('background-color: white')
-        self.move(100,100)
-        self.resize(1500, 500)
+        self.width = 1000 # 2:1 Width:Height Aspect Ratio Used
+        self.height = 500
+        self.title("Ultraportable ECMO Data Visualization App")
+        self.iconbitmap("Caduceus_icon_gold.ico")
+        self.geometry(f"{self.width}x{self.height}")
+        self.minsize(self.width, self.height)
+
+        # setting protocal
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # creating fonts for use in the window
+        self.fontData = ctk.CTkFont(family="Helvetica", size=12, weight="bold")
+        self.fontTitle = ctk.CTkFont(family="Roboto Medium", size=16)
+        self.fontAuthors = ctk.CTkFont(family="Roboto Medium", size=10)
 
         # other part of the 'hack-y' fix. creates an instance of the WorkerThread, passing in itself so that its functions can be accessed by the thread
         self.thread = WorkerThread(self)
 
-        # importing figure canvas to make a plot a widget
-        self.figure_canvas = backend_qt5agg.FigureCanvasQTAgg
+        # need to configure matplotlib plots
 
         # call function to create all the gui visuals
         self.gui_visuals()
@@ -123,53 +141,137 @@ class MainWindow(QMainWindow):
         self.run_thread()
 
         # set the created layout as the layout for the app
-        widget = QWidget()
-        widget.setLayout(self.full_layout)
-        self.setCentralWidget(widget)
 
 
     # functon that creates all the visuals for the gui, this is where changes would be made for the layout
     # new functions will be needed for buttons etc that change the layout depending on what is selected
     def gui_visuals(self):
-        # creating the layouts for the app
-        self.labels_layout = QVBoxLayout()
-        self.plot_grid = QGridLayout()
-        self.full_layout = QHBoxLayout()
+        # making the 2 main frames, one for plots one for readings
+        # configure grid layout (1x2) (row x col)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        # making the visual components for each of the read types
-        # initializing dictionaries
-        self.read_types = ['Inlet Temperature', 'Outlet Temperature', 'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Flowrate']
-        self.read_plots = ['Blood Pressure', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Flowrate']
+        # create the left and right frames
+        self.left_frame()
+        self.right_frame()
+        self.setting_frame()
+
+        # authorship Statement
+        self.authors_Label = ctk.CTkLabel(master=self.frame_left, text="Created by Daniel Kurtz and Alina Gammage for QBiT", font=self.fontAuthors)
+        self.authors_Label.grid(row=13, column=1, pady=20, padx=20,sticky="ew")
+
+
+    # make left frame
+    def left_frame(self):
+        # left frame
+        self.frame_left = ctk.CTkFrame(master=self, width=300, corner_radius=0)
+        self.frame_left.grid(row=0, column=0, sticky="nswe", padx=20, pady=20)
+        self.frame_left.grid_propagate(False)
+        # title
+        self.title_Label = ctk.CTkLabel(master=self.frame_left, text="Ultraportable ECMO DataVis", font=self.fontTitle)
+        self.title_Label.grid(row=1, column=1, pady=10, padx=10)
+        # configure Grid Layout (15x3)
+        self.frame_left.grid_rowconfigure(0, minsize=10)
+        self.frame_left.grid_rowconfigure(2, minsize=10)
+        self.frame_left.grid_rowconfigure(4, minsize=5)
+        self.frame_left.grid_rowconfigure(6, minsize=5)
+        self.frame_left.grid_rowconfigure(8, minsize=5)
+        self.frame_left.grid_rowconfigure(10, minsize=5)
+        self.frame_left.grid_rowconfigure(12, minsize=10)
+        self.frame_left.grid_rowconfigure(14, minsize=10)
+        self.frame_left.grid_columnconfigure(0, minsize=20)
+        self.frame_left.grid_columnconfigure(2, minsize=20) 
+
+        # creating all the visuals for the readings in the left frame
+        self.left_frame_reads()
+
+    def left_frame_reads(self):
+        self.read_types = ['Blood Pressure', 'Outlet Temperature', 'Flowrate', 'Oxygen Concentration', 'Carbon Dioxide Concentration']
         self.labels = {}
         self.read = {}
-        self.vbox = {}
+        self.frame = {}
         self.array = {}
-        self.plots = {}
-        self.canvas = {}
         self.new_read_value = {}
 
         # putting values in dictionaries
+        row = 3
         for read_type in self.read_types:
-            self.labels[read_type], self.read[read_type], self.vbox[read_type], self.array[read_type], self.new_read_value[read_type] = self.make_visuals(read_type)
-            self.vbox[read_type].addWidget(self.labels[read_type])
-            self.vbox[read_type].addWidget(self.read[read_type])
+            self.labels[read_type], self.read[read_type], self.frame[read_type], self.array[read_type], self.new_read_value[read_type] = self.make_visuals(read_type, row)
+            row += 2
+            print(row)
 
-        # putting the visual components into the app layout
-            self.labels_layout.addLayout(self.vbox[read_type], 1)
 
-        # creating each of the plots
-        for read_plot in self.read_plots:
-            self.plots[read_plot], self.canvas[read_plot] = self.make_plots(read_plot)
+    # make right frame
+    def right_frame(self):
+        # entire right frame
+        # configure frame
+        self.frame_right = ctk.CTkFrame(master=self, width=700, bg_color= '#969696', fg_color= '#969696')
+        self.frame_right.grid(row=0, column=1, sticky="nswe", padx=20, pady=20)
+        self.frame_right.grid_propagate(False)
+        # configure grid layout (5x4)
+        self.frame_right.grid_columnconfigure(0, weight=1)
+        self.frame_right.grid_columnconfigure(1, weight=1)
+        self.frame_right.grid_columnconfigure(2, weight=1)
+        self.frame_right.grid_columnconfigure(3, weight=1)
+        self.frame_right.grid_rowconfigure(0, weight=10)
+        self.frame_right.grid_rowconfigure(2, weight=10)
+        self.frame_right.grid_rowconfigure(4, weight=1)
+
+        # blood pressures plot
+        #configure frame
+        self.frameR_left_top = ctk.CTkFrame(master=self.frame_right)
+        self.frameR_left_top.grid(row=0, column=0, columnspan=2, rowspan=2, sticky="nsew")
+        self.frameR_left_top.configure(border_width=2, border_color='#969696', corner_radius=0)
+        # configure grid layout (1x1)
+        self.frameR_left_top.rowconfigure(0, weight=1)
+        self.frameR_left_top.columnconfigure(0, weight=1)
+        self.label_R_LT = ctk.CTkLabel(master=self.frameR_left_top, text="Blood Pressures", font=self.fontTitle)
+        self.label_R_LT.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+
+        # flow rate plot
+        # configure frame
+        self.frameR_right_top = ctk.CTkFrame(master=self.frame_right)
+        self.frameR_right_top.grid(row=0, column=2, columnspan=2, rowspan=2, sticky="nswe")
+        self.frameR_right_top.configure(border_width=2, border_color='#969696', corner_radius=0)
+        # configure grid layout (1x1)
+        self.frameR_right_top.rowconfigure(0, weight=1)
+        self.frameR_right_top.columnconfigure(0, weight=1)
+        self.label_R_RT = ctk.CTkLabel(master=self.frameR_right_top, text="Flow Rate", font=self.fontTitle)
+        self.label_R_RT.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+
+        # blood O2 plot
+        # configure frame
+        self.frameR_left_bot = ctk.CTkFrame(master=self.frame_right)
+        self.frameR_left_bot.grid(row=2, column=0, columnspan=2, rowspan=2, sticky="nswe")
+        self.frameR_left_bot.configure(border_width=2, border_color='#969696',  corner_radius=0)
+        # configure grid layout (1x1)
+        self.frameR_left_bot.rowconfigure(0, weight=1)
+        self.frameR_left_bot.columnconfigure(0, weight=1)
+        self.label_R_LB = ctk.CTkLabel(master=self.frameR_left_bot, text="Blood [O2]", font=self.fontTitle)
+        self.label_R_LB.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
         
-        # add each of the plots to the layout
-        self.plot_grid.addWidget(self.canvas['Blood Pressure'], 1, 1)
-        self.plot_grid.addWidget(self.canvas['Oxygen Concentration'], 1, 2)
-        self.plot_grid.addWidget(self.canvas['Carbon Dioxide Concentration'], 2, 1)
-        self.plot_grid.addWidget(self.canvas['Flowrate'], 2, 2)
-        
-        # adding the layouts to the main layout
-        self.full_layout.addLayout(self.labels_layout)
-        self.full_layout.addLayout(self.plot_grid)
+        # blood co2 plot
+        # configure frame
+        self.frameR_right_bot = ctk.CTkFrame(master=self.frame_right)
+        self.frameR_right_bot.grid(row=2, column=2, columnspan=2, rowspan=2, sticky="nswe")
+        self.frameR_right_bot.configure(border_width=2, border_color='#969696', corner_radius=0)
+        # configure grid layout (1x1)
+        self.frameR_right_bot.rowconfigure(0, weight=1)
+        self.frameR_right_bot.columnconfigure(0, weight=1)
+        self.label_R_RB = ctk.CTkLabel(master=self.frameR_right_bot, text="Blood [CO2]", font=self.fontTitle)
+        self.label_R_RB.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+    
+    def setting_frame(self):
+        self.frameSettings = ctk.CTkFrame(master=self.frame_right)
+        self.frameSettings.grid(row=4, column=0, columnspan=4, rowspan=1, sticky="nswe")
+        self.frameSettings.configure(border_width=2, border_color='#969696', corner_radius=0)
+
+        entry_option = ctk.StringVar(value="Conditions")
+
+        self.value_option_menu = ctk.CTkOptionMenu(master=self.frameSettings, values=["Conditions", "Blood Outlet T",  "Blood Flow Rate", "Blood [O2]", "Blood [CO2]"], command = self.value_selection_menu_callback, variable = entry_option)
+        self.value_option_menu.grid(row=0, column=0, columnspan = 4, padx=20, pady=(20, 10))
+        self.string_input_button = ctk.CTkButton(master=self.frameSettings, text="Input a Value", command=self.open_input_dialog_event)
+        self.string_input_button.grid(row=1, column=0, padx=20, pady=(10, 10))
 
 
         # making array 1 to 100 for time
@@ -193,31 +295,33 @@ class MainWindow(QMainWindow):
         # displaying new reads
         for i, read_type in enumerate(self.read_types):
             self.new_read_value[read_type] = val_list[i]
-            self.read[read_type].setText(str(val_list[i]))
-        # updating plots
-        for read_plot in self.read_plots:
-            if read_plot == 'Blood Pressure':
-                self.update_plot(read_plot, self.new_read_value['Diastolic Blood Pressure'], self.new_read_value['Systolic Blood Pressure'])
-            else:
-                self.update_plot(read_plot, self.new_read_value[read_plot])
+            self.read[read_type].configure(text=(str(val_list[i])))
+        # # updating plots
+        # for read_plot in self.read_plots:
+        #     if read_plot == 'Blood Pressure':
+        #         self.update_plot(read_plot, self.new_read_value['Diastolic Blood Pressure'], self.new_read_value['Systolic Blood Pressure'])
+        #     else:
+        #         self.update_plot(read_plot, self.new_read_value[read_plot])
             # update timer
         self.timer += 1
         self.time.append(self.timer)
 
 
     # makes the visuals
-    def make_visuals(self,title):
-        label = QLabel(title)
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setStyleSheet('background-color: #7ba8f7')
-        read = QLabel('-')
-        read.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        read.setStyleSheet('background-color: #9d9ba2')
-        vbox = QVBoxLayout()
+    def make_visuals(self, title, row):
+        frame = ctk.CTkFrame(master=self.frame_left)
+        frame.grid(row=row, column=1, columnspan=1, rowspan=1, sticky = "nswe")
+        frame.grid_rowconfigure(0, minsize=5)
+        label = ctk.CTkLabel(master=frame, text=title, font=self.fontData)
+        label.grid(row=1, column=0, padx=10)
+        read_label = ctk.CTkLabel(master=frame, text='-', font=self.fontData)
+        read_label.grid(row=2, column=0, padx=10)
+        read_label.grid_rowconfigure(3, minsize=5)
         value_array = []
         new_read = 0
+
         # returns the visual objects
-        return label, read, vbox, value_array, new_read
+        return label, read_label, frame, value_array, new_read
     
     # make the plots
     def make_plots(self, title):
@@ -248,11 +352,27 @@ class MainWindow(QMainWindow):
         self.plots[plot_read].set_ylim(0, 10)
         self.canvas[plot_read].draw()
 
+    # close the application
+    def on_closing(self, event=0):
+        self.destroy()
+
+    # start the application
+    def start(self):
+        self.mainloop()
+
+    # value selection
+    def value_selection_menu_callback(self, entry_option):
+        print("Selected:", entry_option)
+
+    # value entry box
+    def open_input_dialog_event(self):
+        dialog = ctk.CTkInputDialog(text="Type in the desired " + self.value_option_menu.get(), title="Value Input Window")
+        user_input_value = str(dialog.get_input())
+        print(user_input_value)
+
 
 # run the application
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = MainWindow()
+if __name__ == "__main__":
+    app = MainWindow()
+    app.start()
     print('showing window')
-    window.show()
-    sys.exit(app.exec())
