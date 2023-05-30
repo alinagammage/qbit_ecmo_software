@@ -52,7 +52,7 @@ class WorkerThread(QThread):
         self.ser = Serial()
         
         # specifies which serial port
-        portVar = '/dev/cu.usbmodem11202'
+        portVar = '/dev/cu.usbmodem1202'
         
         # opening serial port
         self.ser.baudrate = 9600
@@ -115,7 +115,7 @@ class MainWindow(ctk.CTk):
 
         # window visuals
         self.width = 1000 # 2:1 Width:Height Aspect Ratio Used
-        self.height = 500
+        self.height = 700
         self.title("Ultraportable ECMO Data Visualization App")
         self.iconbitmap("Caduceus_icon_gold.ico")
         self.geometry(f"{self.width}x{self.height}")
@@ -164,7 +164,7 @@ class MainWindow(ctk.CTk):
     # make left frame
     def left_frame(self):
         # left frame
-        self.frame_left = ctk.CTkFrame(master=self, width=300, corner_radius=0)
+        self.frame_left = ctk.CTkFrame(master=self, width=315, corner_radius=0)
         self.frame_left.grid(row=0, column=0, sticky="nswe", padx=20, pady=20)
         self.frame_left.grid_propagate(False)
         # title
@@ -179,8 +179,8 @@ class MainWindow(ctk.CTk):
         self.frame_left.grid_rowconfigure(10, minsize=5)
         self.frame_left.grid_rowconfigure(12, minsize=10)
         self.frame_left.grid_rowconfigure(14, minsize=10)
-        self.frame_left.grid_columnconfigure(0, minsize=20)
-        self.frame_left.grid_columnconfigure(2, minsize=20) 
+        self.frame_left.grid_columnconfigure(0, minsize=10)
+        self.frame_left.grid_columnconfigure(2, minsize=10) 
 
         # creating all the visuals for the readings in the left frame
         self.left_frame_reads()
@@ -198,7 +198,6 @@ class MainWindow(ctk.CTk):
         for read_type in self.read_types:
             self.labels[read_type], self.read[read_type], self.frame[read_type], self.array[read_type], self.new_read_value[read_type] = self.make_visuals(read_type, row)
             row += 2
-            print(row)
 
 
     # make right frame
@@ -312,6 +311,8 @@ class MainWindow(ctk.CTk):
         frame = ctk.CTkFrame(master=self.frame_left)
         frame.grid(row=row, column=1, columnspan=1, rowspan=1, sticky = "nswe")
         frame.grid_rowconfigure(0, minsize=5)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
         label = ctk.CTkLabel(master=frame, text=title, font=self.fontData)
         label.grid(row=1, column=0, padx=10)
         read_label = ctk.CTkLabel(master=frame, text='-', font=self.fontData)
