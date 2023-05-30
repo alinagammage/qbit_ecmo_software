@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QHBoxLayout,
 from statistics import mean
 # imports for matplotlib
 from matplotlib.figure import Figure
-from matplotlib.backends import backend_qt5agg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # imports for tkinter
 import numpy as np
@@ -186,7 +186,7 @@ class MainWindow(ctk.CTk):
         self.left_frame_reads()
 
     def left_frame_reads(self):
-        self.read_types = ['Blood Pressure', 'Outlet Temperature', 'Flowrate', 'Oxygen Concentration', 'Carbon Dioxide Concentration']
+        self.read_types = ['Blood Pressure', 'Outlet Temperature', 'Flow Rate', 'Oxygen Concentration', 'Carbon Dioxide Concentration']
         self.labels = {}
         self.read = {}
         self.frame = {}
@@ -207,6 +207,11 @@ class MainWindow(ctk.CTk):
         self.frame_right = ctk.CTkFrame(master=self, width=700, bg_color= '#969696', fg_color= '#969696')
         self.frame_right.grid(row=0, column=1, sticky="nswe", padx=20, pady=20)
         self.frame_right.grid_propagate(False)
+        
+        self.read_plots = ['Blood Pressure', 'Flow Rate', 'Oxygen Concentration', 'Carbon Dioxide Concentration']
+        self.plots = {}
+        self.canvas = {}
+        
         # configure grid layout (5x4)
         self.frame_right.grid_columnconfigure(0, weight=1)
         self.frame_right.grid_columnconfigure(1, weight=1)
@@ -224,8 +229,7 @@ class MainWindow(ctk.CTk):
         # configure grid layout (1x1)
         self.frameR_left_top.rowconfigure(0, weight=1)
         self.frameR_left_top.columnconfigure(0, weight=1)
-        self.label_R_LT = ctk.CTkLabel(master=self.frameR_left_top, text="Blood Pressures", font=self.fontTitle)
-        self.label_R_LT.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+        self.plots['Blood Pressure'], self.canvas['Blood Pressure'] = self.make_plots('Blood Pressure', self.frameR_left_top)
 
         # flow rate plot
         # configure frame
@@ -235,8 +239,7 @@ class MainWindow(ctk.CTk):
         # configure grid layout (1x1)
         self.frameR_right_top.rowconfigure(0, weight=1)
         self.frameR_right_top.columnconfigure(0, weight=1)
-        self.label_R_RT = ctk.CTkLabel(master=self.frameR_right_top, text="Flow Rate", font=self.fontTitle)
-        self.label_R_RT.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+        self.plots['Flow Rate'], self.canvas['Flow Rate'] = self.make_plots('Flow Rate', self.frameR_right_top)
 
         # blood O2 plot
         # configure frame
@@ -246,8 +249,7 @@ class MainWindow(ctk.CTk):
         # configure grid layout (1x1)
         self.frameR_left_bot.rowconfigure(0, weight=1)
         self.frameR_left_bot.columnconfigure(0, weight=1)
-        self.label_R_LB = ctk.CTkLabel(master=self.frameR_left_bot, text="Blood [O2]", font=self.fontTitle)
-        self.label_R_LB.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+        self.plots['Oxygen Concentration'], self.canvas['Oxygen Concentration'] = self.make_plots('Oxygen Concentration', self.frameR_left_bot)
         
         # blood co2 plot
         # configure frame
@@ -257,8 +259,7 @@ class MainWindow(ctk.CTk):
         # configure grid layout (1x1)
         self.frameR_right_bot.rowconfigure(0, weight=1)
         self.frameR_right_bot.columnconfigure(0, weight=1)
-        self.label_R_RB = ctk.CTkLabel(master=self.frameR_right_bot, text="Blood [CO2]", font=self.fontTitle)
-        self.label_R_RB.grid(column=0, row=0, sticky="nswe", padx=15, pady=15)
+        self.plots['Carbon Dioxide Concentration'], self.canvas['Carbon Dioxide Concentration'] = self.make_plots('Carbon Dioxide Concentration', self.frameR_right_bot)
     
     def setting_frame(self):
         self.frameSettings = ctk.CTkFrame(master=self.frame_right)
@@ -295,13 +296,10 @@ class MainWindow(ctk.CTk):
         for i, read_type in enumerate(self.read_types):
             self.new_read_value[read_type] = val_list[i]
             self.read[read_type].configure(text=(str(val_list[i])))
-        # # updating plots
-        # for read_plot in self.read_plots:
-        #     if read_plot == 'Blood Pressure':
-        #         self.update_plot(read_plot, self.new_read_value['Diastolic Blood Pressure'], self.new_read_value['Systolic Blood Pressure'])
-        #     else:
-        #         self.update_plot(read_plot, self.new_read_value[read_plot])
-            # update timer
+        # updating plots
+        for read_plot in self.read_plots:
+            self.update_plot(read_plot, self.new_read_value[read_plot])
+        # update timer
         self.timer += 1
         self.time.append(self.timer)
 
@@ -325,30 +323,35 @@ class MainWindow(ctk.CTk):
         return label, read_label, frame, value_array, new_read
     
     # make the plots
-    def make_plots(self, title):
+    def make_plots(self, title, master):
         # create a Figure object and add a subplot
-        figure = Figure() 
-        canvas = self.figure_canvas(figure)
+        figure = Figure(figsize=(5, 4), dpi=100)
         axes = figure.add_subplot(111)
         axes.set_xlim(0, 100)
         axes.set_ylim(0, 10)
+        axes.set_title(title)
+
+        canvas = FigureCanvasTkAgg(figure, master=master)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
 
         return axes, canvas
 
     def update_plot(self, plot_read, new_value1, new_value2=None):
         # update two values on the same plot if it's the blood pressure
         self.plots[plot_read].clear()
-        if plot_read == 'Blood Pressure':
-            self.array['Diastolic Blood Pressure'].append(new_value1)
-            self.array['Systolic Blood Pressure'].append(new_value2)
-            self.plots['Blood Pressure'].plot(self.time, self.array['Diastolic Blood Pressure'])
-            self.plots['Blood Pressure'].plot(self.time, self.array['Systolic Blood Pressure'])
-    # update only the one value if it isn't blood pressure
-        else:
-            self.array[plot_read].append(new_value1)
-            self.plots[plot_read].plot(self.time, self.array[plot_read])
+    #     if plot_read == 'Blood Pressure':
+    #         self.array['Diastolic Blood Pressure'].append(new_value1)
+    #         self.array['Systolic Blood Pressure'].append(new_value2)
+    #         self.plots['Blood Pressure'].plot(self.time, self.array['Diastolic Blood Pressure'])
+    #         self.plots['Blood Pressure'].plot(self.time, self.array['Systolic Blood Pressure'])
+    # # update only the one value if it isn't blood pressure
+    #     else:
+        self.array[plot_read].append(new_value1)
+        self.plots[plot_read].plot(self.time, self.array[plot_read])
 
         # update the plot
+        self.plots[plot_read].set_title(plot_read)
         self.plots[plot_read].set_xlim(0, 100)
         self.plots[plot_read].set_ylim(0, 10)
         self.canvas[plot_read].draw()
