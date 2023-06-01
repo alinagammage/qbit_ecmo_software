@@ -186,7 +186,7 @@ class MainWindow(ctk.CTk):
         self.left_frame_reads()
 
     def left_frame_reads(self):
-        self.read_types = ['Blood Pressure', 'Outlet Temperature', 'Flow Rate', 'Oxygen Concentration', 'Carbon Dioxide Concentration']
+        self.read_types = ['Blood Pressure', 'Outlet Temperature', 'Flow Rate', 'Oxygen Concentration', 'Carbon Dioxide Concentration', 'Blood Pressure2']
         self.labels = {}
         self.read = {}
         self.frame = {}
@@ -295,7 +295,13 @@ class MainWindow(ctk.CTk):
         # displaying new reads
         for i, read_type in enumerate(self.read_types):
             self.new_read_value[read_type] = val_list[i]
-            self.read[read_type].configure(text=(str(val_list[i])))
+            if read_type == 'Blood Pressure2':
+                pass
+            else:
+                if read_type == 'Blood Pressure':
+                    self.read[read_type].configure(text=(str(self.new_read_value[read_type])+' / '+str(self.new_read_value['Blood Pressure2'])))
+                else:
+                    self.read[read_type].configure(text=(str(self.new_read_value[read_type])))
         # updating plots
         for read_plot in self.read_plots:
             self.update_plot(read_plot, self.new_read_value[read_plot])
@@ -306,16 +312,21 @@ class MainWindow(ctk.CTk):
 
     # makes the visuals
     def make_visuals(self, title, row):
-        frame = ctk.CTkFrame(master=self.frame_left)
-        frame.grid(row=row, column=1, columnspan=1, rowspan=1, sticky = "nswe")
-        frame.grid_rowconfigure(0, minsize=5)
-        frame.grid_columnconfigure(0, weight=1)
-        frame.grid_rowconfigure(0, weight=1)
-        label = ctk.CTkLabel(master=frame, text=title, font=self.fontData)
-        label.grid(row=1, column=0, padx=10)
-        read_label = ctk.CTkLabel(master=frame, text='-', font=self.fontData)
-        read_label.grid(row=2, column=0, padx=10)
-        read_label.grid_rowconfigure(3, minsize=5)
+        if title == 'Blood Pressure2':
+            frame = None
+            label = None
+            read_label = None
+        else:
+            frame = ctk.CTkFrame(master=self.frame_left)
+            frame.grid(row=row, column=1, columnspan=1, rowspan=1, sticky = "nswe")
+            frame.grid_rowconfigure(0, minsize=5)
+            frame.grid_columnconfigure(0, weight=1)
+            frame.grid_rowconfigure(0, weight=1)
+            label = ctk.CTkLabel(master=frame, text=title, font=self.fontData)
+            label.grid(row=1, column=0, padx=10)
+            read_label = ctk.CTkLabel(master=frame, text='-', font=self.fontData)
+            read_label.grid(row=2, column=0, padx=10)
+            read_label.grid_rowconfigure(3, minsize=5)
         value_array = []
         new_read = 0
 
