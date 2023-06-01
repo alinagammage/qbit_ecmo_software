@@ -304,7 +304,10 @@ class MainWindow(ctk.CTk):
                     self.read[read_type].configure(text=(str(self.new_read_value[read_type])))
         # updating plots
         for read_plot in self.read_plots:
-            self.update_plot(read_plot, self.new_read_value[read_plot])
+            if read_plot == 'Blood Pressure':
+                self.update_plot(read_plot, self.new_read_value[read_plot], self.new_read_value['Blood Pressure2'])
+            else:
+                self.update_plot(read_plot, self.new_read_value[read_plot])
         # update timer
         self.timer += 1
         self.time.append(self.timer)
@@ -351,15 +354,15 @@ class MainWindow(ctk.CTk):
     def update_plot(self, plot_read, new_value1, new_value2=None):
         # update two values on the same plot if it's the blood pressure
         self.plots[plot_read].clear()
-    #     if plot_read == 'Blood Pressure':
-    #         self.array['Diastolic Blood Pressure'].append(new_value1)
-    #         self.array['Systolic Blood Pressure'].append(new_value2)
-    #         self.plots['Blood Pressure'].plot(self.time, self.array['Diastolic Blood Pressure'])
-    #         self.plots['Blood Pressure'].plot(self.time, self.array['Systolic Blood Pressure'])
-    # # update only the one value if it isn't blood pressure
-    #     else:
-        self.array[plot_read].append(new_value1)
-        self.plots[plot_read].plot(self.time, self.array[plot_read])
+        if plot_read == 'Blood Pressure':
+            self.array['Blood Pressure'].append(new_value1)
+            self.array['Blood Pressure2'].append(new_value2)
+            self.plots['Blood Pressure'].plot(self.time, self.array['Blood Pressure'])
+            self.plots['Blood Pressure'].plot(self.time, self.array['Blood Pressure2'])
+    # update only the one value if it isn't blood pressure
+        else:
+            self.array[plot_read].append(new_value1)
+            self.plots[plot_read].plot(self.time, self.array[plot_read])
 
         # update the plot
         self.plots[plot_read].set_title(plot_read)
